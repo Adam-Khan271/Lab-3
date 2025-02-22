@@ -49,14 +49,40 @@ def index():
   return '<h1>mY Todo API</h1>'
 
 # Task 3.1 Here
+def login_user(username, password):
+  user = User.query.filter_by(username=username).first()
+  if user and user.check_password(password):
+    token = create_access_token(identity=username)
+    response = jsonify(access_token=token)
+    set_access_cookies(response, token)
+    return response
+  return jsonify(message="Invalid username or password"), 401
 
 # Task 3.2 Here
-
+@app.route('/login', methods=['POST'])
+def user_login_view():
+  data = request.json
+  response = login_user(data['username'], data['password'])
+  if not response:
+    return jsonify(message='bad username or password given'), 403
+  return response
 # Task 3.3 Here
-
+@app.route('/identify')
+@jwt_required()
+def identify_view():
+  username = get_jwt_identity()
+  user = User.query.filter_by(username=username).first()
+  if user:
+    return jsonify(user.get_json())
+  return jsonify(message='Invalid user'), 403
 # Task 3.4 Here
 
 # Task 4 Here
+@app.route('/logout', methods=['GET'])
+def logout():
+  response = jsonify(message='Logged out')
+  unset_jwt_cookies(response)
+  return response
 
 # ********** Todo Crud Operations ************
 
